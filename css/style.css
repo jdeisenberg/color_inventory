@@ -1,0 +1,80 @@
+@font-face {
+font-family: metsplusBoldItalic;
+src: url(metaplus-bolditalic.ttf);
+}
+@font-face {
+  font-family: metaplus;
+  src: url(metaplus.ttf);
+}
+@font-face {
+font-family: droidBold;
+src: url(metaplus-bold.ttf);
+}
+
+body { 
+	font-family: metaplus, sans-serif; /* modified to make it a choice */
+	color: #333;
+	margin: 0;
+	padding: 0;
+	font-size: 11px;
+	}
+header {
+	background-color: #333;
+	padding: 10px 30px;
+	}
+h1 {
+	font-family: metaplus;
+	color: #fff;
+	font-size: 200%;
+}
+h2 {
+  font-family:metaplus;
+  margin-bottom: 0;
+}
+header h1 {
+padding-top: 15px;
+}
+article {
+	padding: 0 30px;
+}
+article.largerType {
+  font-size: 16px;
+}
+#preview, #closeup { border: none; }
+svg {
+/* border: 1px solid gray; */
+padding: 5px;
+}
+#preview  {
+	cursor: pointer;
+}
+#closeup {
+	vertical-align: top;
+}
+.steps {
+	background-color: #ddd;
+	padding: 20px 20px;
+	border-radius: 15px;
+	width: 80%;
+}
+.split_left {
+	float: left;
+	width: 40%;
+	margin-right: 20px;
+}
+.split_right {
+	float: left;
+	width: 40%;
+}
+#previewArea {
+	position: relative;
+}
+#inventoryDisplay {
+	clear: both;
+	float: left;
+	margin-top: 20px;
+}
+#inventoryDisplay input {
+	margin-left: 30px;
+}
+

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Color Inventory</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css" />
+
+  <script type="text/javascript">
+  const svgNS = "http://www.w3.org/2000/svg";
+  const PREVIEW_HEIGHT = 400;
+  
+  let offScreenCanvas;
+  let offScreenContext;
+  let previewSaveCanvas;
+  let previewCanvas;
+  let previewContext;
+  let closeupCanvas;
+  let closeupContext;
+  let offScreenImage;
+  let svgArea;
+  let chosenColors = [];
+  
+  let setup = () => {
+    offScreenCanvas = document.createElement('canvas');
+    offScreenContext = offScreenCanvas.getContext('2d');
+    previewCanvas = document.getElementById('preview');
+    previewContext = previewCanvas.getContext('2d');
+    previewCanvas.onmousemove = showCloseup;
+    previewCanvas.onmouseout = clearCloseup;
+    previewCanvas.onclick = addColorEntry;
+    previewSaveCanvas = document.createElement('canvas');
+    closeupCanvas = document.getElementById('closeup');
+    closeupContext = closeupCanvas.getContext('2d');
+    svgArea = document.getElementById("svgArea");
+    offScreenImage = new Image();
+  }
+  
+  let loadImage = () => {
+    let fileList = document.getElementById("fileChooser").files;
+    if (fileList.length > 0) {
+      clearCloseup(null);
+      clearSVG();
+      chosenColors = [];
+      let imgFile = fileList[0];
+      offScreenImage.src = window.URL.createObjectURL(imgFile);
+      offScreenImage.onload = function() {
+        /* Determine the dimensions of the uploaded image */
+        let w = offScreenImage.width;
+        let h = offScreenImage.height;
+
+        /* Make the canvas match those dimensions,
+          and draw the image into the canvas */
+        offScreenCanvas.width = w;
+        offScreenCanvas.height = h;
+        offScreenContext.drawImage(offScreenImage, 0, 0);
+        
+        /* And transfer the image to the screen */
+        let preview = document.getElementById("preview");
+        if (offScreenCanvas.height > PREVIEW_HEIGHT) {
+          preview.height = PREVIEW_HEIGHT;
+        } else {
+          preview.height = offScreenCanvas.height;
+        }
+        preview.width = Math.floor(offScreenCanvas.width * (preview.height / offScreenCanvas.height));
+        previewSaveCanvas.height = preview.height;
+        previewSaveCanvas.width = preview.width;
+        
+        previewContext.drawImage(offScreenCanvas, 0, 0, preview.width, preview.height);
+        previewSaveCanvas.getContext('2d').drawImage(offScreenCanvas, 0, 0,
+          preview.width, preview.height);
+          
+        window.URL.revokeObjectURL(this.src); // finished with the temporary URL
+
+      }
+    }
+  }
+
+  let getMousePosition = (obj, evt) => {
+    let obj_left = 0;
+    let obj_top = 0;
+    while (obj.offsetParent)
+    {
+      obj_left += obj.offsetLeft;
+      obj_top += obj.offsetTop;
+      obj = obj.offsetParent;
+    }
+    x = evt.pageX - obj_left;
+    y = evt.pageY - obj_top;
+    return [x, y];
+  }
+
+  let clearSVG = () => {
+    let node = svgArea.lastChild;
+    while (node !== null) {
+      svgArea.removeChild(node);
+      node = svgArea.lastChild;
+    }
+  }
+    
+  let clearCloseup = (evt) => {
+    closeupContext.fillStyle = 'rgba(255, 255, 255, 255)';
+    closeupContext.fillRect(0, 0, 144, 200);
+  }
+
+  let getAverageColor = (bytes, outlineOffset) => {
+    /* Now find average color */
+    let avg = [0, 0, 0, 0];
+    let count = 0;
+    
+    for (let row = 4 - outlineOffset; row < 4 + outlineOffset + 1; row++) {
+      for (let col = 4 - outlineOffset; col < 4 + outlineOffset + 1; col++) {
+        let offset = 4 * (row * 9 + col);
+        if (bytes[offset + 3] !== 0) {
+          count++;
+          for (let n = 0; n < 4; n++) {
+            avg[n] = avg[n] + bytes[offset + n];
+          }
+        }
+      }
+    }
+    
+    if (count > 0) {
+      for (let n = 0; n < 4; n++) {
+        avg[n] = Math.floor(avg[n] / count);
+      }
+    }
+    return avg;
+  }
+  
+  let showCloseup = (evt) => {
+    let [x, y] = getMousePosition(previewCanvas, evt);
+    let radius = parseInt(document.getElementById("radius").value);
+    let outlineOffset = Math.floor((radius - 1) / 2.0);
+    /*
+      get image data + or - 4 around chosen pixel
+    */
+    clearCloseup();
+    let bytes = previewContext.getImageData(x - 4, y - 4, 9, 9).data;
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        let offset = 4 * (row * 9 + col);
+        closeupContext.fillStyle = 'rgba(' + bytes[offset] + ',' +
+          bytes[offset+1] + ',' + bytes[offset+2] + ',' +
+          bytes[offset+3] + ')';
+        closeupContext.fillRect(col * 16, row * 16, 16, 16);
+      }
+    }
+    
+    let offset = 4 * (4 * 9 + 4);
+    closeupContext.strokeStyle = 'rgb(' + (255 - bytes[offset]) +
+        ',' + (255 - bytes[offset + 1]) + ',' + (255 - bytes[offset + 2]) +
+        ')';
+    if (bytes[offset] + bytes[offset + 1] + bytes[offset + 2] < 128 * 3) {
+      closeupContext.strokeStyle = 'white';
+    } else {
+      closeupContext.strokeStyle = 'black';
+    }
+    closeupContext.strokeRect((4 - outlineOffset) * 16,
+      (4 - outlineOffset) * 16, radius * 16, radius * 16);
+
+    
+    avgColor = getAverageColor(bytes, outlineOffset);
+    closeupContext.fillStyle = 'rgb(' + avgColor[0] + ',' +
+          avgColor[1] + ',' + avgColor[2] + ')';
+    closeupContext.fillRect(11, 150, 119, 39);
+    closeup.strokeStyle = 'rgb(0, 0, 0, 255)';
+    closeupContext.strokeRect(10, 149, 120, 40);
+  }
+  
+  let addColorEntry = (evt) => {
+    let [x, y] = getMousePosition(previewCanvas, evt);
+    let radius = parseInt(document.getElementById("radius").value);
+    let outlineOffset = Math.floor((radius - 1) / 2.0);
+    
+    let nEntries = svgArea.getElementsByTagNameNS(svgNS, "g").length;
+    /*
+      get image data + or - 4 around chosen pixel
+    */
+    let bytes = previewContext.getImageData(x - 4, y - 4, 9, 9).data;
+    avgColor = getAverageColor(bytes, outlineOffset);
+    if (avgColor[3] != 0) { /* not transparent already */
+      chosenColors.push(avgColor);
+      updateAnalysis();
+    }
+  }
+  
+  let undoLast = () => {
+    chosenColors.pop();
+    updateAnalysis();
+  }
+  
+  let switchDisplayMode = () => {
+    let asText = document.getElementById('showAsText').checked;
+    if (asText) {
+      document.getElementById('graphicResults').style.display = 'none';
+      document.getElementById('textResults').style.display = 'block';
+    }
+    else {
+      document.getElementById('graphicResults').style.display = 'block';
+      document.getElementById('textResults').style.display = 'none';
+    }
+  }
+
+  let saveSvg = (svgId, name) => {
+      let svgEl = document.getElementById(svgId);
+      svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      var svgData = svgEl.outerHTML;
+      var preface = '<?xml version="1.0" standalone="no"?>\r\n';
+      var svgBlob = new Blob([preface, svgData], {type:"image/svg+xml;charset=utf-8"});
+      var svgUrl = URL.createObjectURL(svgBlob);
+      var downloadLink = document.createElement("a");
+      downloadLink.href = svgUrl;
+      downloadLink.download = name;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+  }
+  
+  window.onload = setup;
+  </script>
+</head>
+
+<body>
+	<header>
+		<h1>The Color Inventory</h1>
+	</header>
+	<article>
+			<div class="split_left">
+				<p class="steps">
+				<label>Select image to sample:</label>
+				<input type="file" id="fileChooser"
+				  accept=".png, .jpg, .jpeg, .gif" onchange="loadImage()"/>
+				</p>
+				<p class="steps">
+				<label>Select a sample size:</label>
+				<select id="radius" onchange="clearCloseup()">
+				  <option value="1">1</option>
+				  <option value="2">4</option>
+				  <option value="3">9</option>
+				</select>
+				</p>
+				<p class="steps">
+				<label>Colors match when distance between them is:</label>
+				<!--
+				  <input id="colorDistance" type="text" size="4" onchange="updateAnalysis()"/>
+				-->
+				<select id="colorDistance" onchange="updateAnalysis()">
+				  <option value="24">Small</option>
+				  <option value="36" selected="selected">Medium</option>
+				  <option value="54">Large</option>
+				</select>
+				</p>
+				<p class="steps">
+				<input type="checkbox" id="removeChosen" value="yes" checked="checked"
+				  onchange="updateAnalysis()" /> Remove chosen colors from image
+				</p>
+			</div>
+			<div class="split_right">
+				<p>
+				Move mouse to see enlarged colors; click to select sample.
+				(<a href="instructions.html">Detailed help</a> /
+        <a href="about.html">About this program</a>)
+				</p>
+			  
+				<p id="previewArea">
+					<canvas id="preview" width="200" height="200"></canvas>
+					<canvas id="closeup" width="144" height="200"></canvas>
+				</p>
+			</div>
+			
+			<div id="inventoryDisplay">
+				<label>Show as</label>
+				<select id="proportion" onchange="updateAnalysis()">
+					<option value="all">proportion of all pixels</option>
+					<option value="chosen" selected="selected">proportion of chosen colors</option>
+				</select>
+				<input type="checkbox" id="sortByColor" value="yes"
+			  onchange="updateAnalysis()" />Sort by color
+				<input type="checkbox" id="showAsText" value="yes"
+			  onchange="switchDisplayMode()" /> Show as text
+			<input type="button" value="Undo last color addition" onclick="undoLast()"/>
+      <input type="button" value="Export SVG"
+        onclick="saveSvg('svgArea', 'proportions.svg')"/>
+        
+			  <div id="graphicResults" style="display: block">
+			  <h2>Your color inventory:</h2>
+				<svg id="svgArea" viewBox="0 0 1020 100" xmlns="http://www.w3.org/2000/svg"
+				  width="1020px" height="100px">
+          <rect x="9" y="9" width="1001" height="81" style="fill:none; stroke:rgb(128,128,128)"/>
+				</svg>
+			  </div>
+		  
+			  <div id="textResults" style="display: none">
+			  <textarea id="textArea" rows="7" cols="60"></textarea>
+			  </div>
+			  <div></div>
+			</div>
+`	</article>
+<script type="text/javascript" src="analysis.js"></script>
+</body>
+</html>

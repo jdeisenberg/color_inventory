@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Color Inventory Instructions</title>
+  <link rel="stylesheet" type="text/css" href="css/style.css"/>
+  <style type="text/css">
+    body { font-family: sans-serif; }
+    dt {
+      margin-top: 0.5em;
+      font-size: 100%;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+<header>
+<h1>Color Inventory Instructions</h1>
+</header>
+
+<article class="largerType">
+<p><a href="index.html">Return to color inventory page</a></p>
+
+<!--
+<p>(Yeah, I know. If you need instructions, the UI is rubbish.)</p>
+-->
+
+<h2>UI Elements</h2>
+
+<dl>
+  <dt>Select image to sample...</dt>
+  <dd>Choose an image to inventory.</dd>
+  <dt>Select a sample size:</dt>
+  <dd>As you mouse over the image, you will see the 9 &times; 9 area of pixels around the cursor. You can choose to select the color of an individual pixel, or to average the 2 &times; 2
+  or 3 &times; 3 pixel area surrounding the cursor position.</dd>
+  <dt>Colors match when distance between them is...</dt>
+  <dd>When you select a color, the inventory program figures out how many pixels in your image have the “same” color. The item you choose from this menu determines how loose this definition really is. (The larger the distance, the more liberal the definition of “same.”)</dd>
+  <dt>Remove chosen colors from image</dt>
+  <dd>As you select colors, they will be “removed” from the image so you don’t choose them twice.</dd>
+  <dt>Show as...</dt>
+  <dd>
+  <dl> 
+    <dt>Proportion of chosen colors</dt>
+    <dd>Given the same image as before, if you select yellow, that’s the <em>only</em> color you have selected so far, so it accounts for 100% of the chosen colors and will fill the entire color inventory. If you then select purple, you now have a total of 500 units; yellow takes up 400 of those 500, so it will fill 80% of the color inventory, and purple will take up 20% of the color bar.</dd>
+    <dt>Proportion of all pixels</dt>
+    <dd>Let’s say you have an image consisting of a green, yellow, and purple horizontal stripe. The height of the green stripe is 400 pixels, the height of the yellow stripe is 300 pixels,
+    and the height of the purple stripe is 100 pixels. If you select yellow, then that color is
+    300 / 800, or 37.5% of the entire image, so it would take up three eighths of the color inventory beneath the menu. If you then choose purple, it will account for 100 / 800, or 12.5% of the entire image, so it will take     up one eighth of the color inventory.</dd>
+  </dl>
+  </dd>
+  <dt>Sort by color</dt>
+  <dd>When selected, items in the color inventory are converted to HSV and sorted by hue and then by saturation.</dd>
+  <dt>Show as text</dt>
+  <dd>Displays the colors and proportions in a text area that you can copy and paste. Colors are displayed in the form <code>rgb(rrr, ggg, bbb)</code>.</dd>
+  <dt>Undo last color addition</dt>
+  <dd>Removes color choices in the reverse order that you made them.</dd>
+  <dt>The color inventory</dt>
+  <dd>If you hover over the colors in the inventory, you will see their RGB values and the percentage of the whole image (or selected colors) that they account for.</dd>
+  <dt>Export SVG</dt>
+  <dd>Exports the color inventory as an SVG file.</dd>
+  </dl>
+</article>
+</body>
+</html>
+
