@@ -271,8 +271,9 @@
 			<div id="inventoryDisplay">
 				<label>Show as</label>
 				<select id="proportion" onchange="updateAnalysis()">
-					<option value="all">proportion of all pixels</option>
 					<option value="chosen" selected="selected">proportion of chosen colors</option>
+					<option value="all">proportion of all pixels</option>
+					<option value="nonprop">non-proportional</optional>
 				</select>
 				<input type="checkbox" id="sortByColor" value="yes"
 			  onchange="updateAnalysis()" />Sort by color
