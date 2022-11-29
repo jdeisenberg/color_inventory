@@ -26,10 +26,19 @@ let rgbToHsv = (colorBytes) => {
   return [hue, saturation, value];
 }
 
-let compareColors = (color1, color2) => {
-  let [hue1, sat1, val1] = rgbToHsv(color1);
-  let [hue2, sat2, val2] = rgbToHsv(color2);
+let debugRgb = (color) => {
+  return("rgb(" + color[0] + ", " + color[1] + ", " + color[2] + ")");
+}
 
+let debugHsv = (color) => {
+  return ("hsv(" + color[0] + ", " + color[1] + ", " + color[2] + ")");
+}
+
+let compareColors = (colorCount1, colorCount2) => {
+  let [hue1, sat1, val1] = rgbToHsv(colorCount1[0]);
+  let [hue2, sat2, val2] = rgbToHsv(colorCount2[0]);
+  // console.log("color1: " + debugRgb(colorCount1[0]) + "/" + debugHsv([hue1, sat1, val1]))
+  // console.log("color2: " + debugRgb(colorCount2[0]) + "/" + debugHsv([hue2, sat2, val2]))
   /* compare by hues first */
   if (hue1 > hue2) {
     result = 1;
@@ -38,6 +47,8 @@ let compareColors = (color1, color2) => {
   } else { // sort descending by saturation
     result = sat2-sat1;
   }
+  // console.log("result of compare is " + result);
+  // console.log();
 
   return result;
 }
@@ -94,13 +105,11 @@ let updateAnalysis = () => {
   imageData.data.set(new Uint8ClampedArray(dataBytes));
   previewContext.putImageData(imageData, 0, 0);
   
-  /* now sort the results array by descending count */
+  /* now sort the color array */
   let proportionSetting = document.getElementById("proportion").value;
   
   if (document.getElementById("sortByColor").checked) {
-    sortedColors.sort(([color1, count1], [color2, count2]) => {
-      compareColors(color1, color2);
-    });
+    sortedColors.sort(compareColors);
   }
   else
   {
@@ -117,10 +126,12 @@ let updateAnalysis = () => {
   }
   
   if (proportionSetting !== "nonprop") {
+    // console.log("showing colors...");
     let total = (proportionSetting === "all") ?
       preview.width * preview.height : totalChosenPixels;
     let xPos = 10;
     sortedColors.forEach( ([color, count]) => {
+      // console.log(debugRgb(color));
       let group = document.createElementNS(svgNS, "g");
       let title = document.createElementNS(svgNS, "title");
       let percent = count / total;
@@ -128,7 +139,7 @@ let updateAnalysis = () => {
       let rgb = "rgb(" + color[0] + ", " + color[1] +
         ", " + color[2] + ")"
       title.appendChild(document.createTextNode(rgb + " " + percentString));
-      textArea.value += rgb + "; /* " + percentString + " */\n";
+      textArea.value += rgb + "; // " + percentString + "\n";
       group.appendChild(title);
 
       let rectangle = document.createElementNS(svgNS, "rect");
@@ -166,6 +177,7 @@ let updateAnalysis = () => {
       svgArea.appendChild(group);
     });
   }
+  
   if (document.getElementById("proportion").value !== "nonprop") {
     let rectangle = document.createElementNS(svgNS, "rect");
     rectangle.setAttribute("x", "9");
@@ -179,3 +191,4 @@ let updateAnalysis = () => {
   }
 
 }
+
