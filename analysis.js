@@ -29,6 +29,7 @@ let rgbToHsv = (colorBytes) => {
 let compareColors = (color1, color2) => {
   let [hue1, sat1, val1] = rgbToHsv(color1);
   let [hue2, sat2, val2] = rgbToHsv(color2);
+
   /* compare by hues first */
   if (hue1 > hue2) {
     result = 1;
@@ -37,6 +38,7 @@ let compareColors = (color1, color2) => {
   } else { // sort descending by saturation
     result = sat2-sat1;
   }
+
   return result;
 }
     
@@ -50,7 +52,8 @@ let updateAnalysis = () => {
   let ctx = previewSaveCanvas.getContext('2d');
   let imageData = ctx.getImageData(0, 0, previewSaveCanvas.width, previewSaveCanvas.height);
   let dataBytes = imageData.data;
-  let results = [];
+  let unsortedColors = [];
+  let sortedColors = [];
   let totalChosenPixels = 0;
   let textArea = document.getElementById('textArea');
   
@@ -83,7 +86,8 @@ let updateAnalysis = () => {
         }
       }
     }
-    results.push([item, count]);
+    unsortedColors.push([item, count]);
+    sortedColors.push([item, count]);
   });
   
   /* Create an imageData object from the byte array, and display it */
@@ -91,45 +95,78 @@ let updateAnalysis = () => {
   previewContext.putImageData(imageData, 0, 0);
   
   /* now sort the results array by descending count */
+  let proportionSetting = document.getElementById("proportion").value;
+  
   if (document.getElementById("sortByColor").checked) {
-    results.sort(([color1, count1], [color2, count2]) => {
+    sortedColors.sort(([color1, count1], [color2, count2]) => {
       compareColors(color1, color2);
     });
   }
-  else {
-    results.sort(([color1, count1], [color2, count2]) => {
-      return count2 - count1
+  else
+  {
+    if (proportionSetting !== "nonprop") {
+      sortedColors.sort(([color1, count1], [color2, count2]) => {
+        return count2 - count1
+      });
+    }
+    else {
+      for (let i = 0; i < chosenColors.length; i++) {
+        sortedColors[i] = [unsortedColors[i][0], unsortedColors[i][1]];
+      }
+    }
+  }
+  
+  if (proportionSetting !== "nonprop") {
+    let total = (proportionSetting === "all") ?
+      preview.width * preview.height : totalChosenPixels;
+    let xPos = 10;
+    sortedColors.forEach( ([color, count]) => {
+      let group = document.createElementNS(svgNS, "g");
+      let title = document.createElementNS(svgNS, "title");
+      let percent = count / total;
+      let percentString = (percent * 100.0).toFixed(0) + "%";
+      let rgb = "rgb(" + color[0] + ", " + color[1] +
+        ", " + color[2] + ")"
+      title.appendChild(document.createTextNode(rgb + " " + percentString));
+      textArea.value += rgb + "; /* " + percentString + " */\n";
+      group.appendChild(title);
+
+      let rectangle = document.createElementNS(svgNS, "rect");
+      
+      rectangle.setAttribute("x", xPos);
+      rectangle.setAttribute("y", "10");
+      rectangle.setAttribute("width", 1000 * percent);
+      rectangle.setAttribute("height", "80");
+      rectangle.setAttribute("fill", rgb);
+      // rectangle.setAttribute("stroke", "rgb(128,128,128)");
+      xPos += 1000 * percent;
+      group.appendChild(rectangle);
+      svgArea.appendChild(group);
+    });
+  } else {
+    let xPos = 40;
+    sortedColors.forEach( ([color, count]) => {
+      let group = document.createElementNS(svgNS, "g");
+      let title = document.createElementNS(svgNS, "title");
+      let rgb = "rgb(" + color[0] + ", " + color[1] +
+        ", " + color[2] + ")"
+      title.appendChild(document.createTextNode(rgb));
+      textArea.value += rgb + ";\n";
+      group.appendChild(title);
+
+      let circle = document.createElementNS(svgNS, "circle");
+      
+      circle.setAttribute("cx", xPos);
+      circle.setAttribute("cy", "40");
+      circle.setAttribute("r", "20");
+      circle.setAttribute("fill", rgb);
+      // circle.setAttribute("stroke", "rgb(128,128,128)");
+      xPos += 50;
+      group.appendChild(circle);
+      svgArea.appendChild(group);
     });
   }
-
-  let total = (document.getElementById("proportion").value === "all") ?
-    preview.width * preview.height : totalChosenPixels;
-  let xPos = 10;  
-  results.forEach( ([color, count]) => {
-    let group = document.createElementNS(svgNS, "g");
-    let title = document.createElementNS(svgNS, "title");
-    let percent = count / total;
-    let percentString = (percent * 100.0).toFixed(0) + "%";
-    let rgb = "rgb(" + color[0] + ", " + color[1] +
-      ", " + color[2] + ")"
-    title.appendChild(document.createTextNode(rgb + " " + percentString));
-    textArea.value += rgb + "; /* " + percentString + " */\n";
-    group.appendChild(title);
-
-    let rectangle = document.createElementNS(svgNS, "rect");
-    
-    rectangle.setAttribute("x", xPos);
-    rectangle.setAttribute("y", "10");
-    rectangle.setAttribute("width", 1000 * percent);
-    rectangle.setAttribute("height", "80");
-    rectangle.setAttribute("fill", rgb);
-    // rectangle.setAttribute("stroke", "rgb(128,128,128)");
-    xPos += 1000 * percent;
-    group.appendChild(rectangle);
-    svgArea.appendChild(group);
-  });
-  
-//  if (document.getElementById("proportion").value === "all") {
+  if (document.getElementById("proportion").value !== "nonprop") {
     let rectangle = document.createElementNS(svgNS, "rect");
     rectangle.setAttribute("x", "9");
     rectangle.setAttribute("y", "9");
@@ -139,6 +176,6 @@ let updateAnalysis = () => {
     rectangle.setAttribute("stroke", "rgb(128, 128, 128)");
     
     svgArea.appendChild(rectangle);
-//  }
+  }
 
 }
