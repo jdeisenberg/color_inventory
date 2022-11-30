@@ -34,6 +34,14 @@ let debugHsv = (color) => {
   return ("hsv(" + color[0] + ", " + color[1] + ", " + color[2] + ")");
 }
 
+/*
+ * This is not a very efficient function; every time we do a
+ * color comparison it does an RGB -> HSV conversion, which is
+ * expensive. However, since there aren't usually going to be more
+ * than 10 or 20 colors, we can live with it.  (If I had
+ * thousands of colors, I'd do the conversion when I first added
+ * the color and make it part of the color information.)
+ */
 let compareColors = (colorCount1, colorCount2) => {
   let [hue1, sat1, val1] = rgbToHsv(colorCount1[0]);
   let [hue2, sat2, val2] = rgbToHsv(colorCount2[0]);
@@ -168,17 +176,17 @@ let updateAnalysis = () => {
       let circle = document.createElementNS(svgNS, "circle");
       
       circle.setAttribute("cx", xPos);
-      circle.setAttribute("cy", "40");
-      circle.setAttribute("r", "20");
+      circle.setAttribute("cy", "45");
+      circle.setAttribute("r", "25");
       circle.setAttribute("fill", rgb);
       // circle.setAttribute("stroke", "rgb(128,128,128)");
-      xPos += 50;
+      xPos += 55;
       group.appendChild(circle);
       svgArea.appendChild(group);
     });
   }
   
-  if (document.getElementById("proportion").value !== "nonprop") {
+  // if (document.getElementById("proportion").value !== "nonprop") {
     let rectangle = document.createElementNS(svgNS, "rect");
     rectangle.setAttribute("x", "9");
     rectangle.setAttribute("y", "9");
@@ -188,7 +196,7 @@ let updateAnalysis = () => {
     rectangle.setAttribute("stroke", "rgb(128, 128, 128)");
     
     svgArea.appendChild(rectangle);
-  }
+  // }
 
 }
 
